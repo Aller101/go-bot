@@ -1,6 +1,10 @@
 package storage
 
-import "crypto/sha1"
+import (
+	"crypto/sha1"
+	"io"
+	"read-adviser-bot/lib/e"
+)
 
 type Storage interface {
 	Save(p *Page) error
@@ -15,6 +19,16 @@ type Page struct {
 }
 
 func (p *Page) Hash() (string, error) {
+	const op = "storage.Hash"
 	h := sha1.New()
-	//10:55
+
+	if _, err := io.WriteString(h, p.URL); err != nil {
+		return "", e.Wrap(op, "can not calc hash", err)
+	}
+
+	if _, err := io.WriteString(h, p.UserName); err != nil {
+		return "", e.Wrap(op, "can not calc hash", err)
+	}
+
+	return string(h.Sum(nil)), nil
 }
