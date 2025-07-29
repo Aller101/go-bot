@@ -2,14 +2,20 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
+	"read-adviser-bot/clients/telegram"
 )
 
 func main() {
 
-	token := mustToken()
+	host, token := mustToken()
 
-	// tgClient := telegram.New(token)
+	fmt.Println(host, " ", token)
+
+	tgClient := telegram.New(host, token)
+
+	fmt.Println(tgClient)
 
 	// processor := processor.New(tgClient)
 
@@ -19,8 +25,9 @@ func main() {
 
 }
 
-func mustToken() string {
+func mustToken() (string, string) {
 	token := flag.String("t", "", "token for telegram")
+	host := flag.String("h", "", "host for telegram")
 
 	flag.Parse()
 
@@ -28,5 +35,9 @@ func mustToken() string {
 		log.Fatal("token is not specified")
 	}
 
-	return *token
+	if *host == "" {
+		log.Fatal("host is not specified")
+	}
+
+	return *token, *host
 }
