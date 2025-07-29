@@ -29,6 +29,10 @@ func New(host string, token string) *Client {
 	}
 }
 
+func newBasePath(token string) string {
+	return "bot" + token
+}
+
 func (c *Client) SendMessage(chatID int, text string) error {
 	const (
 		op     = "telegram.Updates"
@@ -65,16 +69,13 @@ func (c *Client) Updates(offset int, limit int) ([]Update, error) {
 	return res.Result, nil
 }
 
-func newBasePath(token string) string {
-	return "bot" + token
-}
-
-func (c *Client) doRequest(method string, query url.Values) ([]byte, error) {
-
+func (c *Client) doRequest(method string, query url.Values) (data []byte, err error) {
 	const (
 		op     = "telegram.doRequest"
 		errMsg = "can not do request"
 	)
+
+	defer func() { err = e.WrapIfErr(op, errMsg, err) }()
 
 	u := url.URL{
 		Scheme: "https",
@@ -84,20 +85,20 @@ func (c *Client) doRequest(method string, query url.Values) ([]byte, error) {
 
 	req, err := http.NewRequest(http.MethodGet, u.String(), nil)
 	if err != nil {
-		return nil, e.Wrap(op, errMsg, err)
+		return nil, err
 	}
 
 	req.URL.RawQuery = query.Encode()
 
 	resp, err := c.client.Do(req)
 	if err != nil {
-		return nil, e.Wrap(op, errMsg, err)
+		return nil, err
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, e.Wrap(op, errMsg, err)
+		return nil, err
 	}
 	return body, nil
 }
