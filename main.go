@@ -4,7 +4,16 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"read-adviser-bot/clients/telegram"
+	tg_cl "read-adviser-bot/clients/telegram"
+	econsumer "read-adviser-bot/consumer/e-consumer"
+	tg_ev "read-adviser-bot/events/telegram"
+	"read-adviser-bot/storage/files"
+)
+
+const (
+	tgBotHost   = "api.telegram.org"
+	storagePath = "storage"
+	batchSize   = 100
 )
 
 func main() {
@@ -13,15 +22,21 @@ func main() {
 
 	fmt.Println(host, " ", token)
 
-	tgClient := telegram.New(host, token)
+	tgClient := tg_cl.New(host, token)
 
 	fmt.Println(tgClient)
 
-	// processor := processor.New(tgClient)
+	s := files.New(storagePath)
 
-	// fetcher := fetcher.New(tgClient)
+	eventProcesser := tg_ev.New(tgClient, s)
 
-	// consumer.Start(fetcher, processor)
+	log.Print("service started\n")
+
+	cons := econsumer.New(eventProcesser, eventProcesser, batchSize)
+
+	if err := cons.Start(); err != nil {
+		log.Fatal("service is stopped", err)
+	}
 
 }
 
