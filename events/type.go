@@ -1,7 +1,7 @@
 package events
 
 type Fetcher interface {
-	Fetche(limit int) ([]Event, error)
+	Fetch(limit int) ([]Event, error)
 }
 
 type Processor interface {
@@ -11,6 +11,7 @@ type Processor interface {
 type Event struct {
 	Type Type
 	Text string
+	Meta any
 }
 
 type Type int
