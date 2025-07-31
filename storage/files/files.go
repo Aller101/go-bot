@@ -3,6 +3,7 @@ package files
 import (
 	"encoding/gob"
 	"errors"
+	"fmt"
 	"math/rand"
 	"os"
 	"path/filepath"
@@ -75,11 +76,61 @@ func (s *Storage) PickRandom(userName string) (page *storage.Page, err error) {
 	rand.NewSource(time.Now().UnixNano())
 	n := rand.Intn(len(files))
 
-	file := files[n]
+	f := files[n]
 
-	// open decode
+	return s.decodePage(filepath.Join(path, f.Name()))
+}
 
-	return nil, nil
+func (s *Storage) Remove(p *storage.Page) error {
+	fileName, err := fileName(p)
+	if err != nil {
+		return e.Wrap("Remove", "can not remove file", err)
+	}
+
+	path := filepath.Join(s.basePath, p.UserName, fileName)
+
+	if err := os.Remove(path); err != nil {
+		msg := fmt.Sprintf("can not remove file %s", path)
+
+		return e.Wrap("Remove", msg, err)
+	}
+
+	return nil
+}
+
+func (s *Storage) IsExists(p *storage.Page) (bool, error) {
+	fileName, err := fileName(p)
+	if err != nil {
+		return false, e.Wrap("IsExists", "can not check if file exists", err)
+	}
+
+	path := filepath.Join(s.basePath, p.UserName, fileName)
+
+	switch _, err = os.Stat(path); {
+	case errors.Is(err, os.ErrNotExist):
+		return false, nil
+	case err != nil:
+		msg := fmt.Sprintf("can not check if file %s exists", path)
+
+		return false, e.Wrap("IsExists", msg, err)
+	}
+
+	return true, nil
+}
+
+func (s *Storage) decodePage(filePath string) (*storage.Page, error) {
+	f, err := os.Open(filePath)
+	if err != nil {
+		return nil, e.Wrap("decodePage", "can not decode page", err)
+	}
+	defer f.Close()
+	var p storage.Page
+
+	if err := gob.NewDecoder(f).Decode(&p); err != nil {
+		return nil, e.Wrap("decodePage", "can not decode page", err)
+	}
+	return &p, nil
+
 }
 
 func fileName(p *storage.Page) (string, error) {
