@@ -48,11 +48,14 @@ func (c *Client) SendMessage(chatID int, text string) error {
 	return nil
 }
 
-func (c *Client) Updates(offset int, limit int) ([]Update, error) {
+func (c *Client) Updates(offset int, limit int) (updates []Update, err error) {
 	const (
 		op     = "telegram.Updates"
 		errMsg = "can not get updates"
 	)
+
+	defer func() { err = e.WrapIfErr(op, errMsg, err) }()
+
 	q := url.Values{}
 	q.Add("offset", strconv.Itoa(offset))
 	q.Add("limit", strconv.Itoa(limit))
@@ -94,7 +97,8 @@ func (c *Client) doRequest(method string, query url.Values) (data []byte, err er
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	// defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {

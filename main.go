@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
 	tg_cl "read-adviser-bot/clients/telegram"
 	econsumer "read-adviser-bot/consumer/e-consumer"
@@ -12,23 +11,22 @@ import (
 
 const (
 	tgBotHost   = "api.telegram.org"
-	storagePath = "storage"
+	storagePath = "files_storage"
 	batchSize   = 100
 )
 
 func main() {
 
-	host, token := mustToken()
+	// token := mustToken()
 
-	fmt.Println(host, " ", token)
+	// tgClient := tg_cl.New(tgBotHost, token)
 
-	tgClient := tg_cl.New(host, token)
-
-	fmt.Println(tgClient)
+	// fmt.Println(tgClient)
 
 	s := files.New(storagePath)
 
-	eventProcesser := tg_ev.New(tgClient, s)
+	// eventProcesser := tg_ev.New(tgClient, s)
+	eventProcesser := tg_ev.New(tg_cl.New(tgBotHost, mustToken()), s)
 
 	log.Print("service started\n")
 
@@ -40,9 +38,9 @@ func main() {
 
 }
 
-func mustToken() (string, string) {
+func mustToken() string {
 	token := flag.String("t", "", "token for telegram")
-	host := flag.String("h", "", "host for telegram")
+	// host := flag.String("h", "", "host for telegram")
 
 	flag.Parse()
 
@@ -50,9 +48,5 @@ func mustToken() (string, string) {
 		log.Fatal("token is not specified")
 	}
 
-	if *host == "" {
-		log.Fatal("host is not specified")
-	}
-
-	return *token, *host
+	return *token
 }

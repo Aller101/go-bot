@@ -2,13 +2,14 @@ package telegram
 
 import (
 	"errors"
+	"log"
 	"read-adviser-bot/clients/telegram"
 	"read-adviser-bot/events"
 	"read-adviser-bot/lib/e"
 	"read-adviser-bot/storage"
 )
 
-type Proc struct {
+type Processor struct {
 	tg      *telegram.Client
 	offset  int
 	storage storage.Storage
@@ -24,15 +25,16 @@ var (
 	ErrUnknownMetaType  = errors.New("unknown meta type")
 )
 
-func New(client *telegram.Client, storage storage.Storage) *Proc {
-	return &Proc{
+func New(client *telegram.Client, storage storage.Storage) *Processor {
+	return &Processor{
 		tg:      client,
 		storage: storage,
 	}
 }
 
-func (p *Proc) Fetch(limit int) ([]events.Event, error) {
+func (p *Processor) Fetch(limit int) ([]events.Event, error) {
 	update, err := p.tg.Updates(p.offset, limit)
+	// log.Printf("%v\n", update) //[]
 	if err != nil {
 		return nil, e.Wrap("Fetch", "can not get events", err)
 	}
@@ -49,24 +51,28 @@ func (p *Proc) Fetch(limit int) ([]events.Event, error) {
 
 	p.offset = update[len(update)-1].ID + 1
 
+	log.Printf("%v\n", res)
+
 	return res, nil
 }
 
-func (p *Proc) Process(event events.Event) error {
+func (p *Processor) Process(event events.Event) error {
+	log.Printf("%d %s %v\n", event.Type, event.Text, event.Meta)
 	switch event.Type {
 	case events.Message:
 		return p.processMessage(event)
 	default:
-		return e.Wrap("processMessage", "can not process message", ErrUnknownEventType)
+		return e.Wrap("Process", "can not process message", ErrUnknownEventType)
 	}
 }
 
-func (p *Proc) processMessage(event events.Event) error {
+func (p *Processor) processMessage(event events.Event) error {
 	meta, err := meta(event)
+	log.Print("calling processMessage method meta(event)\n")
 	if err != nil {
 		return e.Wrap("processMessage", "can not process message", err)
 	}
-
+	log.Print("calling processMessage method p.doCmd\n")
 	if err := p.doCmd(event.Text, meta.ChatID, meta.Username); err != nil {
 		return e.Wrap("processMessage", "can not process message", err)
 	}

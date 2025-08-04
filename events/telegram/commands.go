@@ -16,7 +16,7 @@ const (
 	StartCmd = "/start"
 )
 
-func (p *Proc) doCmd(text string, chatID int, username string) error {
+func (p *Processor) doCmd(text string, chatID int, username string) error {
 	text = strings.TrimSpace(text)
 
 	log.Printf("got new command '%s' from '%s", text, username)
@@ -37,7 +37,7 @@ func (p *Proc) doCmd(text string, chatID int, username string) error {
 	}
 }
 
-func (p *Proc) savePage(chatID int, pageURL string, username string) (err error) {
+func (p *Processor) savePage(chatID int, pageURL string, username string) (err error) {
 	defer func() { err = e.WrapIfErr("savePage", "can not do command: save page", err) }()
 
 	page := &storage.Page{
@@ -64,7 +64,7 @@ func (p *Proc) savePage(chatID int, pageURL string, username string) (err error)
 	return nil
 }
 
-func (p *Proc) sendRandom(chatID int, username string) (err error) {
+func (p *Processor) sendRandom(chatID int, username string) (err error) {
 	defer func() { err = e.WrapIfErr("sendRandom", "can not do command: can not send random", err) }()
 
 	page, err := p.storage.PickRandom(username)
@@ -82,11 +82,11 @@ func (p *Proc) sendRandom(chatID int, username string) (err error) {
 	return p.storage.Remove(page)
 }
 
-func (p *Proc) sendHelp(chatID int) error {
+func (p *Processor) sendHelp(chatID int) error {
 	return p.tg.SendMessage(chatID, msgHelp)
 }
 
-func (p *Proc) sendHello(chatID int) error {
+func (p *Processor) sendHello(chatID int) error {
 	return p.tg.SendMessage(chatID, msgHello)
 }
 
