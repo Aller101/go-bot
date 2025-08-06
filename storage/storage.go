@@ -3,6 +3,7 @@ package storage
 import (
 	"crypto/sha1"
 	"errors"
+	"fmt"
 	"io"
 	"read-adviser-bot/lib/e"
 )
@@ -33,5 +34,6 @@ func (p *Page) Hash() (string, error) {
 		return "", e.Wrap(op, "can not calc hash", err)
 	}
 
-	return string(h.Sum(nil)), nil
+	// string(h.Sum(nil)), nil
+	return fmt.Sprintf("%x", h.Sum(nil)), nil
 }
